@@ -32,6 +32,7 @@ export function Input({
   required,
   className = '',
   wrapperClassName = '',
+  rightSlot,
   ...props
 }) {
   return (
@@ -41,13 +42,18 @@ export function Input({
           <Icon className="w-4 h-4 text-ink-900/35 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         )}
         <input
-          className={`${fieldBase} ${Icon ? 'pl-10' : 'pl-4'} pr-4 border ${
+          className={`${fieldBase} ${Icon ? 'pl-10' : 'pl-4'} ${rightSlot ? 'pr-11' : 'pr-4'} border ${
             error
               ? 'border-rose-400 focus:ring-rose-400/30'
               : 'border-black/10 focus:border-brand-orange/50 focus:ring-brand-orange/40'
           } ${className}`}
           {...props}
         />
+        {/* e.g. the show/hide-password eye button. Was passed by the
+            login/register pages but never rendered until now. */}
+        {rightSlot && (
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center">{rightSlot}</div>
+        )}
       </div>
     </FieldWrapper>
   );

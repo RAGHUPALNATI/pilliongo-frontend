@@ -334,6 +334,8 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      title={showPassword ? 'Hide password' : 'Show password'}
                       className="text-ink-900/35 hover:text-brand-navy transition-colors"
                       tabIndex={-1}
                     >
@@ -354,6 +356,8 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
                       className="text-ink-900/35 hover:text-brand-navy transition-colors"
                       tabIndex={-1}
                     >

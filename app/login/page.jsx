@@ -212,7 +212,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-ink-900/35 hover:text-brand-navy focus:outline-none transition-colors"
-                  title={showPassword ? 'Hide Password' : 'Show Password'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4 text-brand-orange" /> : <Eye className="w-4 h-4" />}
@@ -313,7 +314,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="text-ink-900/35 hover:text-brand-navy focus:outline-none transition-colors"
-                  title={showNewPassword ? 'Hide Password' : 'Show Password'}
+                  title={showNewPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                   tabIndex={-1}
                 >
                   {showNewPassword ? <EyeOff className="w-4 h-4 text-brand-orange" /> : <Eye className="w-4 h-4" />}
@@ -333,7 +335,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="text-ink-900/35 hover:text-brand-navy focus:outline-none transition-colors"
-                  title={showConfirmPassword ? 'Hide Password' : 'Show Password'}
+                  title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4 text-brand-orange" /> : <Eye className="w-4 h-4" />}
