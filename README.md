@@ -1,8 +1,8 @@
 # PillionGo — Web App
 
-Next.js frontend for **PillionGo**, a student ride-sharing platform for LPU and the
-Phagwara / Jalandhar area. Riders request instant or pre-planned rides, drivers
-offer seats on routes they're already driving, and everyone splits the cost.
+Next.js frontend for **PillionGo**, a peer-to-peer ride-sharing platform for anyone,
+anywhere. Riders request instant or pre-planned rides, drivers offer seats on
+routes they're already driving, and everyone splits the cost.
 
 The Spring Boot backend lives in a separate project (`pilliongo`) — see its
 README for the API, database and secrets setup.
