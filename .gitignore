@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+build/
+
+# env files (secrets / local config)
+.env
+.env*.local
+
+# logs & OS junk
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/
+
+# local AI audit notes
+Claude outputs/
