@@ -105,6 +105,15 @@ function AdminControllerContent() {
   const [editingKnownLocId, setEditingKnownLocId] = useState(null);
   const [editingKnownLocName, setEditingKnownLocName] = useState('');
 
+  // Map positions for locations (lets fares work in any city).
+  const [newLocName, setNewLocName] = useState('');
+  const [newLocCoords, setNewLocCoords] = useState('');
+  const [addingLoc, setAddingLoc] = useState(false);
+  const [editingCoordsId, setEditingCoordsId] = useState(null);
+  const [editingCoordsValue, setEditingCoordsValue] = useState('');
+  const [locatingId, setLocatingId] = useState(null);
+  const [locatingAll, setLocatingAll] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   const loadAdminData = async () => {
@@ -378,6 +387,84 @@ function AdminControllerContent() {
       refreshLocations();
     } catch (err) {
       showToast(err.message || 'Failed to delete location', 'error');
+    }
+  };
+
+  // "31.2536, 75.7037" (as copied from Google Maps) -> [31.2536, 75.7037]
+  const parseCoords = (text) => {
+    const parts = (text || '').split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length === 0) return [null, null];
+    const [lat, lng] = parts.map(Number);
+    if (parts.length !== 2 || Number.isNaN(lat) || Number.isNaN(lng)) {
+      throw new Error('Enter coordinates as "latitude, longitude", e.g. 31.2536, 75.7037');
+    }
+    return [lat, lng];
+  };
+
+  const handleAddKnownLoc = async (e) => {
+    e.preventDefault();
+    if (!newLocName.trim()) return;
+    setAddingLoc(true);
+    try {
+      const [lat, lng] = parseCoords(newLocCoords);
+      const loc = await adminAPI.addKnownLocation(newLocName.trim(), lat, lng);
+      showToast(
+        loc.latitude != null
+          ? `'${loc.name}' added with its map position`
+          : `'${loc.name}' added, but it wasn't found on the map. Set its position manually for accurate fares.`,
+        loc.latitude != null ? 'success' : 'info'
+      );
+      setNewLocName('');
+      setNewLocCoords('');
+      loadKnownLocations();
+      refreshLocations();
+    } catch (err) {
+      showToast(err.message || 'Failed to add location', 'error');
+    } finally {
+      setAddingLoc(false);
+    }
+  };
+
+  const handleSaveCoords = async (e) => {
+    e.preventDefault();
+    try {
+      const [lat, lng] = parseCoords(editingCoordsValue);
+      await adminAPI.setKnownLocationCoordinates(editingCoordsId, lat, lng);
+      showToast(lat == null ? 'Map position cleared' : 'Map position saved', 'success');
+      setEditingCoordsId(null);
+      loadKnownLocations();
+    } catch (err) {
+      showToast(err.message || 'Failed to save map position', 'error');
+    }
+  };
+
+  const handleLocateOne = async (loc) => {
+    setLocatingId(loc.id);
+    try {
+      await adminAPI.geocodeKnownLocation(loc.id);
+      showToast(`Found '${loc.name}' on the map`, 'success');
+      loadKnownLocations();
+    } catch (err) {
+      showToast(err.message || 'Could not find this place on the map', 'error');
+    } finally {
+      setLocatingId(null);
+    }
+  };
+
+  const handleLocateAllMissing = async () => {
+    setLocatingAll(true);
+    try {
+      const { located = [], notFound = [] } = await adminAPI.geocodeMissingLocations();
+      showToast(
+        `Located ${located.length} place(s).` +
+          (notFound.length ? ` Not found: ${notFound.join(', ')}. Set those manually.` : ''),
+        notFound.length ? 'info' : 'success'
+      );
+      loadKnownLocations();
+    } catch (err) {
+      showToast(err.message || 'Failed to locate places', 'error');
+    } finally {
+      setLocatingAll(false);
     }
   };
 
@@ -1086,7 +1173,8 @@ function AdminControllerContent() {
                       <MapPin className="w-5 h-5 text-brand-orange" /> All Locations
                     </h3>
                     <p className="text-xs text-ink-900/50">
-                      Every place name selectable in pickup/destination dropdowns app-wide. Fix a typo or remove a junk entry here.
+                      Every place name selectable in pickup/destination dropdowns app-wide. Add places in any city, fix a typo or remove a junk entry here.
+                      When both ends of a ride have a <b>map position</b>, its fare uses the real map distance.
                     </p>
                   </div>
                   <Input
@@ -1098,6 +1186,32 @@ function AdminControllerContent() {
                   />
                 </div>
 
+                <form onSubmit={handleAddKnownLoc} className="flex flex-col md:flex-row md:items-end gap-3 bg-black/[0.02] p-4 rounded-xl border border-black/5">
+                  <Input
+                    label="New location"
+                    placeholder="e.g. Connaught Place, New Delhi"
+                    value={newLocName}
+                    onChange={(e) => setNewLocName(e.target.value)}
+                    wrapperClassName="flex-1"
+                  />
+                  <Input
+                    label="Map position (optional)"
+                    placeholder="lat, lng (blank = auto-find)"
+                    value={newLocCoords}
+                    onChange={(e) => setNewLocCoords(e.target.value)}
+                    wrapperClassName="md:w-64"
+                  />
+                  <Button type="submit" variant="primary" size="md" isLoading={addingLoc}>
+                    Add location
+                  </Button>
+                  <Button type="button" variant="secondary" size="md" isLoading={locatingAll} onClick={handleLocateAllMissing}>
+                    Locate all missing
+                  </Button>
+                </form>
+                <p className="text-[11px] text-ink-900/45 -mt-2">
+                  Tip: in Google Maps, right-click a spot and click the coordinates to copy them, then paste here. Auto-find uses OpenStreetMap.
+                </p>
+
                 {knownLocationsList.length === 0 ? (
                   <EmptyState icon={MapPin} title="No locations yet" description="Locations added above (or approved from a rider/driver request) will appear here." />
                 ) : (
@@ -1107,6 +1221,7 @@ function AdminControllerContent() {
                         <tr>
                           <th className="py-3 px-4"># ID</th>
                           <th className="py-3 px-4">Location Name</th>
+                          <th className="py-3 px-4">Map Position</th>
                           <th className="py-3 px-4 text-right">Actions</th>
                         </tr>
                       </thead>
@@ -1140,9 +1255,65 @@ function AdminControllerContent() {
                                   loc.name
                                 )}
                               </td>
+                              <td className="py-2.5 px-4">
+                                {editingCoordsId === loc.id ? (
+                                  <form onSubmit={handleSaveCoords} className="flex items-center gap-2">
+                                    <input
+                                      autoFocus
+                                      placeholder="lat, lng"
+                                      value={editingCoordsValue}
+                                      onChange={(e) => setEditingCoordsValue(e.target.value)}
+                                      className="w-40 px-2.5 py-1 rounded-lg border border-brand-orange/50 bg-white text-xs font-mono text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
+                                    />
+                                    <button type="submit" className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg">
+                                      Save
+                                    </button>
+                                    <button type="button" onClick={() => setEditingCoordsId(null)} className="px-2.5 py-1 bg-black/5 hover:bg-black/10 text-ink-900/60 text-[11px] font-bold rounded-lg">
+                                      Cancel
+                                    </button>
+                                  </form>
+                                ) : loc.latitude != null && loc.longitude != null ? (
+                                  <a
+                                    href={`https://www.openstreetmap.org/?mlat=${loc.latitude}&mlon=${loc.longitude}#map=15/${loc.latitude}/${loc.longitude}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-mono text-[11px] text-emerald-700 hover:underline"
+                                    title="Open on map"
+                                  >
+                                    {Number(loc.latitude).toFixed(4)}, {Number(loc.longitude).toFixed(4)}
+                                  </a>
+                                ) : (
+                                  <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                                    Not set
+                                  </span>
+                                )}
+                              </td>
                               <td className="py-2.5 px-4 text-right">
                                 {editingKnownLocId !== loc.id && (
                                   <div className="flex items-center justify-end gap-2">
+                                    {editingCoordsId !== loc.id && (
+                                      <>
+                                        <button
+                                          onClick={() => handleLocateOne(loc)}
+                                          disabled={locatingId === loc.id}
+                                          className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg transition-colors disabled:opacity-50"
+                                          title="Find this place on OpenStreetMap"
+                                        >
+                                          {locatingId === loc.id ? 'Locating...' : 'Auto-locate'}
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setEditingCoordsId(loc.id);
+                                            setEditingCoordsValue(
+                                              loc.latitude != null ? `${loc.latitude}, ${loc.longitude}` : ''
+                                            );
+                                          }}
+                                          className="px-3 py-1 bg-black/5 hover:bg-black/10 text-brand-navy text-[11px] font-bold rounded-lg transition-colors"
+                                        >
+                                          Set position
+                                        </button>
+                                      </>
+                                    )}
                                     <button
                                       onClick={() => handleStartRenameKnownLoc(loc)}
                                       className="px-3 py-1 bg-black/5 hover:bg-black/10 text-brand-navy text-[11px] font-bold rounded-lg transition-colors"

@@ -1,5 +1,7 @@
 # PillionGo — Web App
 
+[![Frontend CI](https://github.com/RAGHUPALNATI/pilliongo-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/RAGHUPALNATI/pilliongo-frontend/actions/workflows/ci.yml)
+
 Next.js frontend for **PillionGo**, a peer-to-peer ride-sharing platform for anyone,
 anywhere. Riders request instant or pre-planned rides, drivers offer seats on
 routes they're already driving, and everyone splits the cost.
