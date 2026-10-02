@@ -7,6 +7,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import StatusProgress from '@/components/StatusProgress';
 import { useAuth } from '@/context/AuthContext';
 import { ridesAPI, driverAPI } from '@/lib/api';
+import { usePolling, POLL_MS } from '@/hooks/usePolling';
 import Button from '@/components/Button';
 import StatusBadge from '@/components/StatusBadge';
 import { Card } from '@/components/Card';
@@ -72,17 +73,10 @@ function RideStatusContent() {
     }
   }, [id]);
 
-  // Poll ride status every 3 seconds for live tracking
-  useEffect(() => {
-    if (!id || !ride) return;
-    if (['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(ride.status)) return;
-
-    const interval = setInterval(() => {
-      fetchRide(true);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [id, ride?.status]);
+  // Refresh the ride every 10 seconds for live tracking, until it's over.
+  // Pauses while the tab is in the background.
+  const rideIsLive = !!id && !!ride && !['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(ride.status);
+  usePolling(() => fetchRide(true), POLL_MS.liveRide, { enabled: rideIsLive });
 
   // Live location broadcast — whichever side is viewing this page (rider
   // or driver) shares their own position while the ride is actually

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { ridesAPI, driverAPI } from '@/lib/api';
+import { usePolling, POLL_MS } from '@/hooks/usePolling';
 
 // Shared data/state/handlers for both driver dashboard pages
 // (/driver/dashboard for Instant + /driver/dashboard/planned for Planned).
@@ -83,13 +84,9 @@ export default function useDriverDashboard() {
     fetchDriverData(false);
   }, []);
 
-  // Poll available rides & status every 4 seconds for real-time driver updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchDriverData(true);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  // Refresh available rides & status every 12 seconds. Pauses while the
+  // tab is in the background and refreshes the moment the driver returns.
+  usePolling(() => fetchDriverData(true), POLL_MS.dashboard);
 
   // Live location broadcast — only while actually on an active ride
   // (accepted or in progress), so it never runs idly in the background.

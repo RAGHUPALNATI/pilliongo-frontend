@@ -3,7 +3,7 @@
 import React from 'react';
 
 // Perf note: the shimmer sweep animates `transform` only (never width/height
-// or blur), so it stays cheap even on the dashboards that poll every 3-4s.
+// or blur), so it stays cheap even on the dashboards that poll every 10-15s.
 export function Skeleton({ className = '' }) {
   return (
     <div className={`relative overflow-hidden rounded-lg bg-black/[0.06] ${className}`}>

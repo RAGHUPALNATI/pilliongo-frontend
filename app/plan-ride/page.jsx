@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { ridesAPI, vehicleAPI, locationAPI, LOCATIONS } from '@/lib/api';
+import { usePolling, POLL_MS } from '@/hooks/usePolling';
 import Button from '@/components/Button';
 import StatusBadge from '@/components/StatusBadge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/Card';
@@ -134,9 +135,11 @@ export default function PlanRidePage() {
   useEffect(() => {
     if (topTab !== 'INSTANT') return;
     loadInstantData();
-    const interval = setInterval(loadInstantData, 4000);
-    return () => clearInterval(interval);
   }, [topTab, isDriverUser, isAuthenticated]);
+
+  // Keep the instant board fresh, only while the Instant tab is open and
+  // this browser tab is visible.
+  usePolling(loadInstantData, POLL_MS.dashboard, { enabled: topTab === 'INSTANT' });
 
   // A driver-posted instant offer that's still waiting for a rider to book it
   const myLiveInstantOffer = myDriverHistory.find(

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { ridesAPI } from '@/lib/api';
+import { usePolling, POLL_MS } from '@/hooks/usePolling';
 import Button from '@/components/Button';
 import StatusBadge from '@/components/StatusBadge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/Card';
@@ -89,14 +90,9 @@ function RiderDashboardContent() {
     loadRiderData(false);
   }, []);
 
-  // Poll backend every 4 seconds to keep active ride status and the live
-  // driver instant-offer feed in sync
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadRiderData(true);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [activeRide?.id, activeRide?.status]);
+  // Refresh every 12 seconds to keep the active ride status and the live
+  // driver instant-offer feed in sync. Pauses while the tab is hidden.
+  usePolling(() => loadRiderData(true), POLL_MS.dashboard);
 
   // 15-Minute Expiry Countdown Timer Effect (Visual Countdown)
   useEffect(() => {

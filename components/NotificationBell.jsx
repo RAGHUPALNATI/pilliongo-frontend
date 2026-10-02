@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { notificationAPI } from '@/lib/api';
+import { usePolling, POLL_MS } from '@/hooks/usePolling';
 import {
   Bell,
   Check,
@@ -52,9 +53,9 @@ export default function NotificationBell() {
 
   useEffect(() => {
     refreshUnreadCount();
-    const interval = setInterval(refreshUnreadCount, 10000);
-    return () => clearInterval(interval);
   }, []);
+
+  usePolling(refreshUnreadCount, POLL_MS.notifications);
 
   useEffect(() => {
     const onClickOutside = (e) => {
